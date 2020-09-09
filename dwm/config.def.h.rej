@@ -1,10 +1,14 @@
---- config.def.h
-+++ config.def.h
-@@ -2,6 +2,7 @@
+--- config.def.h	2019-05-28 13:43:00.326646120 +0200
++++ config.def.h	2019-05-28 21:17:55.213171996 +0200
+@@ -36,8 +36,11 @@ static const float mfact     = 0.55; /*
+ static const int nmaster     = 1;    /* number of clients in master area */
+ static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
  
- /* appearance */
- static const unsigned int borderpx  = 1;        /* border pixel of windows */
-+static const unsigned int gappx     = 5;        /* gaps between windows */
- static const unsigned int snap      = 32;       /* snap pixel */
- static const int showbar            = 1;        /* 0 means no bar */
- static const int topbar             = 1;        /* 0 means bottom bar */
++#include "fibonacci.c"
+ static const Layout layouts[] = {
+ 	/* symbol     arrange function */
++ 	{ "[@]",      spiral },
++ 	{ "[\\]",     dwindle },
+ 	{ "[]=",      tile },    /* first entry is default */
+ 	{ "><>",      NULL },    /* no layout function means floating behavior */
+ 	{ "[M]",      monocle },
