@@ -1,38 +1,61 @@
 /* See LICENSE file for copyright and license details. */
 
-/* appearance */
+//////////////////
+//    Layout    //
+//////////////////
+
 static const unsigned int borderpx  = 4;        /* border pixel of windows */
 static const unsigned int snap      = 8;       /* snap pixel */
 static const int showbar            = 1;        /* 0 means no bar */
-static const unsigned int gappx     = 14;        /* gaps between windows */
+static const unsigned int gappx     = 18;        /* gaps between windows */
 static const int topbar             = 0;        /* 0 means bottom bar */
-static const int focusonwheel 	    = 0;
 static const unsigned int systraypinning = 0;   /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
 static const unsigned int systrayspacing = 2;   /* systray spacing */
 static const int systraypinningfailfirst = 1;   /* 1: if pinning fails, display systray on the first monitor, False: display systray on the last monitor*/
 static const int showsystray        = 1;     /* 0 means no systray */
+static const int attachdirection = 4;    /* 0 default, 1 above, 2 aside, 3 below, 4 bottom, 5 top */
 
-static const char *fonts[]          = { "DejaVuSansMono Nerd Font Mono:size=14",
-					"DejaVu Sans Mono:size=14",
-					"Noto Color Emoji:size=14",
+
+/////////////////
+//    Fonts    //
+/////////////////
+
+// dwm
+static const char *fonts[]          = { "JetBrainsMono Nerd Font Mono:size=12",
+					"Noto Color Emoji:size=12",
 					"Font Awesome 5 Brands:size=14",
 					"Font Awesome 5 Free:size=14",
 					"FontAwesome:size=14"};
+// dmenu
+static const char dmenufont[]       = "JetBrainsMono Nerd Font Mono:size=12";
 
-static const char dmenufont[]       = "DejaVuSansMono Nerd Font Mono:size=12";
+//////////////////////////
+//    Color Scheming    //
+//////////////////////////
+
+// Theme
 static const char bg[]       = "#2a2426"; // Background
 static const char ib[]       = "#e68183"; // Inactive Border
 static const char ft[]       = "#e6d6ac"; // Font
 static const char tc[]       = "#242021"; // Current Tag & Window Font Color
 static const char ab[]       = "#87af87"; // Top Bar Second Color & Active Border
+
+// Color Layout
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
 	[SchemeNorm] = { ft, 	    bg,        ib },
 	[SchemeSel]  = { tc,        ab,        ab  },
 };
 
-/* tagging */
+////////////////
+//    Tags    //
+////////////////
+
 static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+
+/////////////////////////
+//    Window Rules     //
+/////////////////////////
 
 static const Rule rules[] = {
 	/* xprop(1):
@@ -43,11 +66,16 @@ static const Rule rules[] = {
 	{ "Gimp",     NULL,       NULL,       0,            1,           -1 }
 };
 
-/* layout(s) */
+//////////////////
+//    Layout    //
+//////////////////
+
+// Layout Specifications
 static const float mfact     = 0.51; /* factor of master area size [0.05..0.95] */
 static const int nmaster     = 1;    /* number of clients in master area */
 static const int resizehints = 0;    /* 1 means respect size hints in tiled resizals */
 
+// Layouts
 #include "fibonacci.c"
 static const Layout layouts[] = {
 	/* symbol     arrange function */
@@ -58,7 +86,11 @@ static const Layout layouts[] = {
  	{ "[@]",      spiral },
 };
 
-/* key definitions */
+//////////////////////////////////
+//    Binding Configurations    //
+//////////////////////////////////
+
+// Key Definitions
 #define MODKEY Mod1Mask
 #define TAGKEYS(KEY,TAG) \
 	{ MODKEY,                       KEY,      view,           {.ui = 1 << TAG} }, \
@@ -69,20 +101,24 @@ static const Layout layouts[] = {
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
-/* commands */
+// Commands //
+
+// Window Commands
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", bg, "-nf", ft, "-sb", ab, "-sf", tc, NULL };
 static const char *termcmd[]  = { "kitty", NULL };
+
+// Volume Commands
 static const char *upvol[]   = { "/usr/bin/pactl", "set-sink-volume", "0", "+2%",     NULL };
 static const char *downvol[] = { "/usr/bin/pactl", "set-sink-volume", "0", "-2%",     NULL };
 static const char *mutevol[] = { "/usr/bin/pactl", "set-sink-mute",   "0", "toggle",  NULL };
 
-
+// Keyboard Bindings
 #include "push.c"
 static Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_d,      spawn,          {.v = dmenucmd } },
-	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
+	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
@@ -92,12 +128,12 @@ static Key keys[] = {
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
 	{ MODKEY,                       XK_z,      zoom,           {0} },
 	{ MODKEY,                       XK_Tab,    view,           {0} },
-	{ MODKEY|ShiftMask,             XK_c,      killclient,     {0} },
-	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[0]} },
-	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[1]} },
-	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
-	{ MODKEY,                       XK_r,      setlayout,      {.v = &layouts[3]} },
-	{ MODKEY|ShiftMask,             XK_r,      setlayout,      {.v = &layouts[4]} },
+	{ MODKEY,                       XK_c,      killclient,     {0} },
+	{ MODKEY|ShiftMask,             XK_r,      setlayout,      {.v = &layouts[0]} },
+	{ MODKEY,                       XK_t,      setlayout,      {.v = &layouts[1]} },
+	{ MODKEY,                       XK_f,      setlayout,      {.v = &layouts[2]} },
+	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[3]} },
+	{ MODKEY,                       XK_r,      setlayout,      {.v = &layouts[4]} },
 	{ MODKEY,                       XK_space,  setlayout,      {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, {0} },
 	{ MODKEY|ShiftMask,             XK_f,      togglefullscr,  {0} },
@@ -127,8 +163,7 @@ static Key keys[] = {
 	{ MODKEY|ControlMask,           XK_k,      pushup,         {0} },
 };
 
-/* button definitions */
-/* click can be ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle, ClkClientWin, or ClkRootWin */
+// Mouse Bindings
 static Button buttons[] = {
 	/* click                event mask      button          function        argument */
 	{ ClkLtSymbol,          0,              Button1,        setlayout,      {0} },

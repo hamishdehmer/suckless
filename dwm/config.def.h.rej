@@ -1,14 +1,10 @@
---- config.def.h	2019-05-28 13:43:00.326646120 +0200
-+++ config.def.h	2019-05-28 21:17:55.213171996 +0200
-@@ -36,8 +36,11 @@ static const float mfact     = 0.55; /*
+--- config.def.h
++++ config.def.h
+@@ -35,6 +35,7 @@ static const Rule rules[] = {
+ static const float mfact     = 0.55; /* factor of master area size [0.05..0.95] */
  static const int nmaster     = 1;    /* number of clients in master area */
  static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
++static const int attachdirection = 0;    /* 0 default, 1 above, 2 aside, 3 below, 4 bottom, 5 top */
  
-+#include "fibonacci.c"
  static const Layout layouts[] = {
  	/* symbol     arrange function */
-+ 	{ "[@]",      spiral },
-+ 	{ "[\\]",     dwindle },
- 	{ "[]=",      tile },    /* first entry is default */
- 	{ "><>",      NULL },    /* no layout function means floating behavior */
- 	{ "[M]",      monocle },
