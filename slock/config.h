@@ -1,7 +1,5 @@
 /* user and group to drop privileges to */
 static const char *user  = "ziox";
-#define COLORC "red"
-#define COLORC "red"
 static const char *group = "wheel";
 
 static const char *colorname[NUMCOLS] = {

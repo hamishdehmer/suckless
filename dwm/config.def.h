@@ -107,18 +107,28 @@ static const Layout layouts[] = {
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", bg, "-nf", ft, "-sb", ab, "-sf", tc, NULL };
 static const char *termcmd[]  = { "kitty", NULL };
+static const char *browser[]  = { "brave", NULL };
+static const char *fbrowser[] = { "nemo", NULL };
+static const char *slock[]    = { "slock", NULL };
 
 // Volume Commands
 static const char *upvol[]   = { "/usr/bin/pactl", "set-sink-volume", "0", "+2%",     NULL };
 static const char *downvol[] = { "/usr/bin/pactl", "set-sink-volume", "0", "-2%",     NULL };
 static const char *mutevol[] = { "/usr/bin/pactl", "set-sink-mute",   "0", "toggle",  NULL };
 
+// Restart Pulse
+static const char *killpulse[] = { "pulseaudio", "-k", NULL };
+static const char *startpulse[] = { "pulseaudio", "-D", NULL };
+
 // Keyboard Bindings
 #include "push.c"
 static Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_d,      spawn,          {.v = dmenucmd } },
+	{ MODKEY|ShiftMask,             XK_b,      spawn,          {.v = browser } },
 	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
+        { MODKEY,                       XK_n,      spawn,          {.v = fbrowser } },
+        { MODKEY|ShiftMask,             XK_s,      spawn,          {.v = slock } },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
@@ -159,6 +169,8 @@ static Key keys[] = {
         { MODKEY,                       XK_F2, 	   spawn,          {.v = downvol } },
   	{ MODKEY,                       XK_F1,     spawn,          {.v = mutevol } },
 	{ MODKEY,                       XK_F3,     spawn,          {.v = upvol   } },
+	{ MODKEY|ShiftMask,             XK_bracketleft, spawn,     {.v = killpulse } },
+	{ MODKEY|ShiftMask,             XK_bracketright, spawn,    {.v = startpulse } },
 	{ MODKEY|ControlMask,           XK_j,      pushdown,       {0} },
 	{ MODKEY|ControlMask,           XK_k,      pushup,         {0} },
 };
