@@ -51,7 +51,7 @@ static const char *colors[][3]      = {
 //    Tags    //
 ////////////////
 
-static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+static const char *tags[] = { "", "", "", "", "", "", "", "", "" };
 
 /////////////////////////
 //    Window Rules     //
@@ -112,9 +112,9 @@ static const char *fbrowser[] = { "nemo", NULL };
 static const char *slock[]    = { "slock", NULL };
 
 // Volume Commands
-static const char *upvol[]   = { "/usr/bin/pactl", "set-sink-volume", "0", "+2%",     NULL };
-static const char *downvol[] = { "/usr/bin/pactl", "set-sink-volume", "0", "-2%",     NULL };
-static const char *mutevol[] = { "/usr/bin/pactl", "set-sink-mute",   "0", "toggle",  NULL };
+static const char *upvol[]   = { "amixer", "-q", "sset", "Master", "2%+", NULL };
+static const char *downvol[] = { "amixer", "-q", "sset", "Master", "2%-", NULL };
+static const char *mutevol[] = { "amixer", "-q", "sset", "Master", "0%",  NULL };
 
 // Restart Pulse
 static const char *killpulse[] = { "pulseaudio", "-k", NULL };
@@ -125,11 +125,11 @@ static const char *startpulse[] = { "pulseaudio", "-D", NULL };
 static Key keys[] = {
 	/* modifier                     key        function        argument */
 	{ MODKEY,                       XK_d,      spawn,          {.v = dmenucmd } },
-	{ MODKEY|ShiftMask,             XK_b,      spawn,          {.v = browser } },
+	{ MODKEY,                       XK_b,      spawn,          {.v = browser } },
 	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
         { MODKEY,                       XK_n,      spawn,          {.v = fbrowser } },
         { MODKEY|ShiftMask,             XK_s,      spawn,          {.v = slock } },
-	{ MODKEY,                       XK_b,      togglebar,      {0} },
+	{ MODKEY|ShiftMask,                       XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
 	{ MODKEY,                       XK_i,      incnmaster,     {.i = +1 } },

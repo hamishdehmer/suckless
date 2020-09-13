@@ -114,7 +114,7 @@ static const char *slock[]    = { "slock", NULL };
 // Volume Commands
 static const char *upvol[]   = { "amixer", "-q", "sset", "Master", "2%+", NULL };
 static const char *downvol[] = { "amixer", "-q", "sset", "Master", "2%-", NULL };
-static const char *mutevol[] = { "amixer", "-q", "sset", "Master", "0%",  NULL };
+static const char *mutevol[] = { "amixer", "-q", "sset", "Master", "0%" NULL };
 
 // Restart Pulse
 static const char *killpulse[] = { "pulseaudio", "-k", NULL };
