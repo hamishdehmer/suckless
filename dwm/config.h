@@ -34,11 +34,11 @@ static const char dmenufont[]       = "JetBrainsMono Nerd Font Mono:size=12";
 //////////////////////////
 
 // Theme
-static const char bg[]       = "#2a2426"; // Background
-static const char ib[]       = "#e68183"; // Inactive Border
-static const char ft[]       = "#e6d6ac"; // Font
-static const char tc[]       = "#242021"; // Current Tag & Window Font Color
-static const char ab[]       = "#87af87"; // Top Bar Second Color & Active Border
+static const char bg[]       = "#2d202e"; // Background
+static const char ib[]       = "#fc4767"; // Inactive Border
+static const char ft[]       = "#ffffe1"; // Font
+static const char tc[]       = "#2d202e"; // Current Tag & Window Font Color
+static const char ab[]       = "#44e275"; // Top Bar Second Color & Active Border
 
 // Color Layout
 static const char *colors[][3]      = {
@@ -51,7 +51,9 @@ static const char *colors[][3]      = {
 //    Tags    //
 ////////////////
 
-static const char *tags[] = { "", "", "", "", "", "", "", "", "" };
+// static const char *tags[] = { "1:", "2:", "3:", "4:", "5:", "6:", "7:", "8:", "9:" };
+//static const char *tags[] = { "1:", "2:", "3:", "4:", "5:", "6:" };
+static const char *tags[] = { "HOME", "TERM", "WEB", "DOCS", "DOWN", "MAIL" };
 
 /////////////////////////
 //    Window Rules     //
@@ -124,12 +126,12 @@ static const char *startpulse[] = { "pulseaudio", "-D", NULL };
 #include "push.c"
 static Key keys[] = {
 	/* modifier                     key        function        argument */
-	{ MODKEY,                       XK_d,      spawn,          {.v = dmenucmd } },
+	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
 	{ MODKEY,                       XK_b,      spawn,          {.v = browser } },
 	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
         { MODKEY,                       XK_n,      spawn,          {.v = fbrowser } },
         { MODKEY|ShiftMask,             XK_s,      spawn,          {.v = slock } },
-	{ MODKEY|ShiftMask,                       XK_b,      togglebar,      {0} },
+	{ MODKEY|ShiftMask,             XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
 	{ MODKEY,                       XK_i,      incnmaster,     {.i = +1 } },
@@ -163,8 +165,8 @@ static Key keys[] = {
 	TAGKEYS(                        XK_5,                      4)
 	TAGKEYS(                        XK_6,                      5)
 	TAGKEYS(                        XK_7,                      6)
-	TAGKEYS(                        XK_8,                      7)
-	TAGKEYS(                        XK_9,                      8)
+//	TAGKEYS(                        XK_8,                      7)
+//	TAGKEYS(                        XK_9,                      8)
 	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} }, 
         { MODKEY,                       XK_F2, 	   spawn,          {.v = downvol } },
   	{ MODKEY,                       XK_F1,     spawn,          {.v = mutevol } },
