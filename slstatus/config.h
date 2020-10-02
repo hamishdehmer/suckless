@@ -65,8 +65,8 @@ static const struct arg args[] = {
 	/* function format          argument */
 	{ netspeed_rx, "  %sB/s &", "enp2s0" },
         { netspeed_tx, "  %sB/s | ", "enp2s0" },
-        { cpu_perc, " %3s%% | ", NULL    },
-        { ram_perc, " %2s%% | ", NULL    },
-	{ run_command, " %4s | ", "amixer sget Master | awk '/%/ {print $5 }' | head -n1" },
-	{ datetime,    " %s",     "%a %b %d %T " },
+        { cpu_perc, "CPU %3s%% | ", NULL    },
+        { ram_perc, "RAM %2s%% | ", NULL    },
+	{ run_command, "VOL %4s | ", "amixer sget Master | awk '/%/ {print $5 }' | head -n1" },
+	{ datetime,    "%s",     "%a %b %d %T " },
 };

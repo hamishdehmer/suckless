@@ -1,0 +1,10 @@
+--- dwm.c
++++ dwm.c
+@@ -695,6 +695,7 @@ dirtomon(int dir)
+ void
+ drawbar(Monitor *m)
+ {
++	int indn;
+ 	int x, w, sw = 0;
+ 	int boxs = drw->fonts->h / 9;
+ 	int boxw = drw->fonts->h / 6 + 2;
