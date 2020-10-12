@@ -51,9 +51,8 @@ static const char *colors[][3]      = {
 //    Tags    //
 ////////////////
 
-// static const char *tags[] = { "🏠", "⌨️"", "🕸️", "📝", "🗃️", "📬" };
-//static const char *tags[] = { "1:", "2:", "3:", "4:", "5:", "6:" };
-static const char *tags[] = { "HOME", "TERM", "WEB", "DOCS", "DOWN", "MAIL" };
+static const char *tags[] = { " 1", " 2", " 3", " 4", " 5", " 6" };
+//static const char *tags[] = { "HOME", "TERM", "WEB", "DOCS", "DOWN", "MAIL" };
 
 /////////////////////////
 //    Window Rules     //
@@ -109,7 +108,7 @@ static const Layout layouts[] = {
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", bg, "-nf", ft, "-sb", ab, "-sf", tc, NULL };
 static const char *termcmd[]  = { "kitty", NULL };
-static const char *browser[]  = { "brave", NULL };
+static const char *browser[]  = { "firefox", NULL };
 static const char *fbrowser[] = { "nemo", NULL };
 static const char *slock[]    = { "slock", NULL };
 

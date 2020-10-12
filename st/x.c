@@ -19,6 +19,7 @@ char *argv0;
 #include "arg.h"
 #include "st.h"
 #include "win.h"
+#include "hb.h"
 
 /* types used in config.h */
 typedef struct {
@@ -58,7 +59,6 @@ static void selpaste(const Arg *);
 static void zoom(const Arg *);
 static void zoomabs(const Arg *);
 static void zoomreset(const Arg *);
-static void setpalette(const Arg *);
 static void ttysend(const Arg *);
 
 /* config.h for applying patches and the configuration. */
@@ -106,6 +106,7 @@ typedef struct {
 	XSetWindowAttributes attrs;
 	int scr;
 	int isfixed; /* is fixed geometry? */
+	int depth; /* bit depth */
 	int l, t; /* left and top offset */
 	int gm; /* geometry mask */
 } XWindow;
@@ -246,6 +247,7 @@ static char *usedfont = NULL;
 static double usedfontsize = 0;
 static double defaultfontsize = 0;
 
+static char *opt_alpha = NULL;
 static char *opt_class = NULL;
 static char **opt_cmd  = NULL;
 static char *opt_embed = NULL;
@@ -738,7 +740,7 @@ xresize(int col, int row)
 
 	XFreePixmap(xw.dpy, xw.buf);
 	xw.buf = XCreatePixmap(xw.dpy, xw.win, win.w, win.h,
-			DefaultDepth(xw.dpy, xw.scr));
+			xw.depth);
 	XftDrawChange(xw.draw, xw.buf);
 	xclear(0, 0, win.w, win.h);
 
@@ -755,7 +757,24 @@ sixd_to_16bit(int x)
 int
 xloadcolor(int i, const char *name, Color *ncolor)
 {
-	if (!name)  name = colorname[i];
+	XRenderColor color = { .alpha = 0xffff };
+
+	if (!name) {
+		if (BETWEEN(i, 16, 255)) { /* 256 color */
+			if (i < 6*6*6+16) { /* same colors as xterm */
+				color.red   = sixd_to_16bit( ((i-16)/36)%6 );
+				color.green = sixd_to_16bit( ((i-16)/6) %6 );
+				color.blue  = sixd_to_16bit( ((i-16)/1) %6 );
+			} else { /* greyscale */
+				color.red = 0x0808 + 0x0a0a * (i - (6*6*6+16));
+				color.green = color.blue = color.red;
+			}
+			return XftColorAllocValue(xw.dpy, xw.vis,
+			                          xw.cmap, &color, ncolor);
+		} else
+			name = colorname[i];
+	}
+
 	return XftColorAllocName(xw.dpy, xw.vis, xw.cmap, name, ncolor);
 }
 
@@ -770,7 +789,7 @@ xloadcols(void)
 		for (cp = dc.col; cp < &dc.col[dc.collen]; ++cp)
 			XftColorFree(xw.dpy, xw.vis, xw.cmap, cp);
 	} else {
-		dc.collen = 16;
+		dc.collen = MAX(LEN(colorname), 256);
 		dc.col = xmalloc(dc.collen * sizeof(Color));
 	}
 
@@ -781,6 +800,13 @@ xloadcols(void)
 			else
 				die("could not allocate color %d\n", i);
 		}
+
+	/* set alpha value of bg color */
+	if (opt_alpha)
+		alpha = strtof(opt_alpha, NULL);
+	dc.col[defaultbg].color.alpha = (unsigned short)(0xffff * alpha);
+	dc.col[defaultbg].pixel &= 0x00FFFFFF;
+	dc.col[defaultbg].pixel |= (unsigned char)(0xff * alpha) << 24;
 	loaded = 1;
 }
 
@@ -1113,6 +1139,9 @@ xunloadfont(Font *f)
 void
 xunloadfonts(void)
 {
+	/* Clear Harfbuzz font cache. */
+	hbunloadfonts();
+
 	/* Free the loaded fonts in the font cache.  */
 	while (frclen > 0)
 		XftFontClose(xw.dpy, frc[--frclen].font);
@@ -1185,11 +1214,23 @@ xinit(int cols, int rows)
 	Window parent;
 	pid_t thispid = getpid();
 	XColor xmousefg, xmousebg;
+	XWindowAttributes attr;
+	XVisualInfo vis;
 
 	if (!(xw.dpy = XOpenDisplay(NULL)))
 		die("can't open display\n");
 	xw.scr = XDefaultScreen(xw.dpy);
-	xw.vis = XDefaultVisual(xw.dpy, xw.scr);
+
+	if (!(opt_embed && (parent = strtol(opt_embed, NULL, 0)))) {
+		parent = XRootWindow(xw.dpy, xw.scr);
+		xw.depth = 32;
+	} else {
+		XGetWindowAttributes(xw.dpy, parent, &attr);
+		xw.depth = attr.depth;
+	}
+
+	XMatchVisualInfo(xw.dpy, xw.scr, xw.depth, TrueColor, &vis);
+	xw.vis = vis.visual;
 
 	/* font */
 	if (!FcInit())
@@ -1202,7 +1243,7 @@ xinit(int cols, int rows)
 	xloadsparefonts();
 
 	/* colors */
-	xw.cmap = XDefaultColormap(xw.dpy, xw.scr);
+	xw.cmap = XCreateColormap(xw.dpy, parent, xw.vis, None);
 	xloadcols();
 
 	/* adjust fixed window geometry */
@@ -1222,19 +1263,15 @@ xinit(int cols, int rows)
 		| ButtonMotionMask | ButtonPressMask | ButtonReleaseMask;
 	xw.attrs.colormap = xw.cmap;
 
-	if (!(opt_embed && (parent = strtol(opt_embed, NULL, 0))))
-		parent = XRootWindow(xw.dpy, xw.scr);
 	xw.win = XCreateWindow(xw.dpy, parent, xw.l, xw.t,
-			win.w, win.h, 0, XDefaultDepth(xw.dpy, xw.scr), InputOutput,
+			win.w, win.h, 0, xw.depth, InputOutput,
 			xw.vis, CWBackPixel | CWBorderPixel | CWBitGravity
 			| CWEventMask | CWColormap, &xw.attrs);
 
 	memset(&gcvalues, 0, sizeof(gcvalues));
 	gcvalues.graphics_exposures = False;
-	dc.gc = XCreateGC(xw.dpy, parent, GCGraphicsExposures,
-			&gcvalues);
-	xw.buf = XCreatePixmap(xw.dpy, xw.win, win.w, win.h,
-			DefaultDepth(xw.dpy, xw.scr));
+	xw.buf = XCreatePixmap(xw.dpy, xw.win, win.w, win.h, xw.depth);
+	dc.gc = XCreateGC(xw.dpy, xw.buf, GCGraphicsExposures, &gcvalues);
 	XSetForeground(xw.dpy, dc.gc, dc.col[defaultbg].pixel);
 	XFillRectangle(xw.dpy, xw.buf, dc.gc, 0, 0, win.w, win.h);
 
@@ -1314,7 +1351,7 @@ xmakeglyphfontspecs(XftGlyphFontSpec *specs, const Glyph *glyphs, int len, int x
 		mode = glyphs[i].mode;
 
 		/* Skip dummy wide-character spacing. */
-		if (mode == ATTR_WDUMMY)
+		if (mode & ATTR_WDUMMY)
 			continue;
 
 		/* Determine font for glyph if different from previous glyph. */
@@ -1421,6 +1458,9 @@ xmakeglyphfontspecs(XftGlyphFontSpec *specs, const Glyph *glyphs, int len, int x
 		numspecs++;
 	}
 
+	/* Harfbuzz transformation for ligatures. */
+	hbtransform(specs, glyphs, len, x, y);
+
 	return numspecs;
 }
 
@@ -1465,6 +1505,10 @@ xdrawglyphfontspecs(const XftGlyphFontSpec *specs, Glyph base, int len, int x, i
 		bg = &dc.col[base.bg];
 	}
 
+	/* Change basic system colors [0-7] to bright system colors [8-15] */
+	if ((base.mode & ATTR_BOLD_FAINT) == ATTR_BOLD && BETWEEN(base.fg, 0, 7))
+		fg = &dc.col[base.fg + 8];
+
 	if (IS_SET(MODE_REVERSE)) {
 		if (fg == &dc.col[defaultfg]) {
 			fg = &dc.col[defaultbg];
@@ -1504,12 +1548,6 @@ xdrawglyphfontspecs(const XftGlyphFontSpec *specs, Glyph base, int len, int x, i
 		temp = fg;
 		fg = bg;
 		bg = temp;
-	}
-
-	if (base.mode & ATTR_SELECTED) {
-		bg = &dc.col[selectionbg];
-		if (!ignoreselfg)
-			fg = &dc.col[selectionfg];
 	}
 
 	if (base.mode & ATTR_BLINK && win.mode & MODE_BLINK)
@@ -1572,14 +1610,17 @@ xdrawglyph(Glyph g, int x, int y)
 }
 
 void
-xdrawcursor(int cx, int cy, Glyph g, int ox, int oy, Glyph og)
+xdrawcursor(int cx, int cy, Glyph g, int ox, int oy, Glyph og, Line line, int len)
 {
 	Color drawcol;
 
 	/* remove the old cursor */
 	if (selected(ox, oy))
-                og.mode ^= ATTR_SELECTED;
-	xdrawglyph(og, ox, oy);
+		og.mode ^= ATTR_REVERSE;
+
+	/* Redraw the line where cursor was previously.
+	 * It will restore the ligatures broken by the cursor. */
+	xdrawline(line, 0, oy, len);
 
 	if (IS_SET(MODE_HIDE))
 		return;
@@ -1591,13 +1632,23 @@ xdrawcursor(int cx, int cy, Glyph g, int ox, int oy, Glyph og)
 
 	if (IS_SET(MODE_REVERSE)) {
 		g.mode |= ATTR_REVERSE;
-                g.fg = defaultcs;
 		g.bg = defaultfg;
-                drawcol = dc.col[defaultrcs];
+		if (selected(cx, cy)) {
+			drawcol = dc.col[defaultcs];
+			g.fg = defaultrcs;
+		} else {
+			drawcol = dc.col[defaultrcs];
+			g.fg = defaultcs;
+		}
 	} else {
-                g.fg = defaultbg;
-                g.bg = defaultcs;
-                drawcol = dc.col[defaultcs];
+		if (selected(cx, cy)) {
+			g.fg = defaultfg;
+			g.bg = defaultrcs;
+		} else {
+			g.fg = defaultbg;
+			g.bg = defaultcs;
+		}
+		drawcol = dc.col[g.bg];
 	}
 
 	/* draw the new one */
@@ -1672,8 +1723,6 @@ xsettitle(char *p)
 int
 xstartdraw(void)
 {
-	if (IS_SET(MODE_VISIBLE))
-		XCopyArea(xw.dpy, xw.win, xw.buf, dc.gc, 0, 0, win.w, win.h, 0, 0);
 	return IS_SET(MODE_VISIBLE);
 }
 
@@ -1691,7 +1740,7 @@ xdrawline(Line line, int x1, int y1, int x2)
 		if (new.mode == ATTR_WDUMMY)
 			continue;
 		if (selected(x, y1))
-			new.mode ^= ATTR_SELECTED;
+			new.mode ^= ATTR_REVERSE;
 		if (i > 0 && ATTRCMP(base, new)) {
 			xdrawglyphfontspecs(specs, base, i, ox, y1);
 			specs += i;
@@ -1908,7 +1957,6 @@ kpress(XEvent *ev)
 			len = 2;
 		}
 	}
-	
 	ttywrite(buf, len, 1);
 }
 
@@ -1940,9 +1988,6 @@ resize(XEvent *e)
 
 	cresize(e->xconfigure.width, e->xconfigure.height);
 }
-
-int tinsync(uint);
-int ttyread_pending();
 
 void
 run(void)
@@ -1978,7 +2023,7 @@ run(void)
 		FD_SET(ttyfd, &rfd);
 		FD_SET(xfd, &rfd);
 
-		if (XPending(xw.dpy) || ttyread_pending())
+		if (XPending(xw.dpy))
 			timeout = 0;  /* existing events might not set xfd */
 
 		seltv.tv_sec = timeout / 1E3;
@@ -1992,8 +2037,7 @@ run(void)
 		}
 		clock_gettime(CLOCK_MONOTONIC, &now);
 
-		int ttyin = FD_ISSET(ttyfd, &rfd) || ttyread_pending();
-		if (ttyin)
+		if (FD_ISSET(ttyfd, &rfd))
 			ttyread();
 
 		xev = 0;
@@ -2017,7 +2061,7 @@ run(void)
 		 * maximum latency intervals during `cat huge.txt`, and perfect
 		 * sync with periodic updates from animations/key-repeats/etc.
 		 */
-		if (ttyin || xev) {
+		if (FD_ISSET(ttyfd, &rfd) || xev) {
 			if (!drawing) {
 				trigger = now;
 				drawing = 1;
@@ -2026,18 +2070,6 @@ run(void)
 			          / maxlatency * minlatency;
 			if (timeout > 0)
 				continue;  /* we have time, try to find idle */
-		}
-
-		if (tinsync(su_timeout)) {
-			/*
-			 * on synchronized-update draw-suspension: don't reset
-			 * drawing so that we draw ASAP once we can (just after
-			 * ESU). it won't be too soon because we already can
-			 * draw now but we skip. we set timeout > 0 to draw on
-			 * SU-timeout even without new content.
-			 */
-			timeout = minlatency;
-			continue;
 		}
 
 		/* idle detected or maxlatency exhausted -> draw */
@@ -2073,15 +2105,6 @@ usage(void)
 	    " [stty_args ...]\n", argv0, argv0);
 }
 
-void setpalette(const Arg *arg) {
-
-    if ( arg->i < LEN(palettes) )   {
-        colorname = palettes[arg->i];
-        xloadcols();
-        cresize(win.w, win.h);
-    }
-}
-
 int
 main(int argc, char *argv[])
 {
@@ -2092,6 +2115,9 @@ main(int argc, char *argv[])
 	ARGBEGIN {
 	case 'a':
 		allowaltscreen = 0;
+		break;
+	case 'A':
+		opt_alpha = EARGF(usage());
 		break;
 	case 'c':
 		opt_class = EARGF(usage());
@@ -2134,8 +2160,6 @@ main(int argc, char *argv[])
 	} ARGEND;
 
 run:
-    colorname = palettes[0];
-
 	if (argc > 0) /* eat all remaining arguments */
 		opt_cmd = argv;
 
@@ -2154,4 +2178,3 @@ run:
 
 	return 0;
 }
-

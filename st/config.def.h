@@ -5,18 +5,14 @@
  *
  * font: see http://freedesktop.org/software/fontconfig/fontconfig-user.html
  */
-static char *font = "JetBrainsMono Nerd Font Mono:pixelsize=16:antialias=true:autohint=true";
-static int borderpx = 2;
-
+static char *font = "JetBrainsMono Nerd Font Mono:pixelsize=19:antialias=true:autohint=true";
 /* Spare fonts */
 static char *font2[] = {
-	"Noto Color Emoji:pixelsize=16:antialias=true:autohint=true",
-	"PowerlineSymbols:pixelsize=16:antialias=true:autohint=true",
-	"Font Awesome 5 Brands:size=16",
-	"Font Awesome 5 Free:size=16",
-	"FontAwesome=size=16"
+	"FontAwesome:pixelsize=19:antialias=true:autohint=true",
+	"Noto Color Emoji:pixelsize=19:antialias=true:autohint=true",
 };
 
+static int borderpx = 2;
 
 /*
  * What program is execed by st depends of these precedence rules:
@@ -26,7 +22,7 @@ static char *font2[] = {
  * 4: value of shell in /etc/passwd
  * 5: value of shell in config.h
  */
-static char *shell = "/bin/sh";
+static char *shell = "/bin/zsh";
 char *utmp = NULL;
 /* scroll program: to enable use a string like "scroll" */
 char *scroll = NULL;
@@ -67,12 +63,6 @@ static double minlatency = 8;
 static double maxlatency = 33;
 
 /*
- * Synchronized-Update timeout in ms
- * https://gitlab.com/gnachman/iterm2/-/wikis/synchronized-updates-spec
- */
-static uint su_timeout = 200;
-
-/*
  * blinking timeout (set to 0 to disable blinking) for the terminal blinking
  * attribute.
  */
@@ -90,7 +80,7 @@ static unsigned int cursorthickness = 2;
 static int bellvolume = 0;
 
 /* default TERM value */
-char *termname = "st";
+char *termname = "st-256color";
 
 /*
  * spaces per tab
@@ -109,12 +99,38 @@ char *termname = "st";
  */
 unsigned int tabspaces = 8;
 
-/* Terminal colors (16 used in escape sequence) */
-static const char *palettes[][16] = {
-    {"#2a2426", "#e68183", "#87af87", "#d9bb80", "#89beba", "#d3a0bc", "#87c095", "#d8caac",
-    "#444444", "#eb9a9c", "#93b973", "#e1c999", "#a1cbc8", "#dcb3c9", "#9fcdaa", "#ebdebd"},
+/* bg opacity */
+float alpha = 0.8;
+
+/* Terminal colors (16 first used in escape sequence) */
+static const char *colorname[] = {
+	/* 8 normal colors */
+	"#373b31",
+	"#e06c75",
+	"#98c379",
+	"#e5c07b",
+	"#61afef",
+	"#c678dd",
+	"#56b6c2",
+	"#abb2bf",
+
+	/* 8 bright colors */
+	"#4b4e54",
+	"#e37a82",
+	"#a2c986",
+	"#e7c688",
+	"#70b7f0",
+	"#cb85e0",
+	"#66bdc8",
+	"#b3bbc9",
+
+	[255] = 0,
+
+	/* more colors can be added after 255 to use with DefaultXX */
+	"#abb2bf",
+	"#282a2e",
+	"#282a2e",
 };
-static const char **colorname;
 
 
 /*
@@ -122,18 +138,9 @@ static const char **colorname;
  * foreground, background, cursor, reverse cursor
  */
 unsigned int defaultfg = 7;
-unsigned int defaultbg = 0;
-static unsigned int defaultcs = 7;
-static unsigned int defaultrcs = 7;
-
-
-/* Colors used for selection */
-unsigned int selectionbg = 6;
-unsigned int selectionfg = 7;
-/* If 0 use selectionfg as foreground in order to have a uniform foreground-color */
-/* Else if 1 keep original foreground-color of each cell => more colors :) */
-static int ignoreselfg = 1;
-
+unsigned int defaultbg = 258;
+static unsigned int defaultcs = 256;
+static unsigned int defaultrcs = 257;
 
 /*
  * Default shape of cursor
@@ -142,7 +149,7 @@ static int ignoreselfg = 1;
  * 6: Bar ("|")
  * 7: Snowman ("☃")
  */
-static unsigned int cursorshape = 2;
+static unsigned int cursorshape = 4;
 
 /*
  * Default columns and rows numbers
@@ -177,6 +184,8 @@ static uint forcemousemod = ShiftMask;
  */
 static MouseShortcut mshortcuts[] = {
 	/* mask                 button   function        argument       release */
+	{ ShiftMask,            Button4, kscrollup,      {.i = 1} },
+	{ ShiftMask,            Button5, kscrolldown,    {.i = 1} },
 	{ XK_ANY_MOD,           Button2, selpaste,       {.i = 0},      1 },
 	{ ShiftMask,            Button4, ttysend,        {.s = "\033[5;2~"} },
 	{ XK_ANY_MOD,           Button4, ttysend,        {.s = "\031"} },
@@ -200,17 +209,10 @@ static Shortcut shortcuts[] = {
 	{ TERMMOD,              XK_C,           clipcopy,       {.i =  0} },
 	{ TERMMOD,              XK_V,           clippaste,      {.i =  0} },
 	{ TERMMOD,              XK_Y,           selpaste,       {.i =  0} },
-	{ ShiftMask,            XK_Insert,      clippaste,      {.i =  0} },
+	{ ShiftMask,            XK_Insert,      selpaste,       {.i =  0} },
 	{ TERMMOD,              XK_Num_Lock,    numlock,        {.i =  0} },
-	{ MODKEY|ShiftMask,     XK_F1,          setpalette,     {.i =  0} },
-	{ MODKEY|ShiftMask,     XK_F2,          setpalette,     {.i =  1} },
-	{ MODKEY|ShiftMask,     XK_F3,          setpalette,     {.i =  2} },
-	{ MODKEY|ShiftMask,     XK_F4,          setpalette,     {.i =  3} },
-	{ MODKEY|ShiftMask,     XK_F5,          setpalette,     {.i =  4} },
-	{ MODKEY|ShiftMask,     XK_F6,          setpalette,     {.i =  5} },
-	{ MODKEY|ShiftMask,     XK_F7,          setpalette,     {.i =  6} },
-	{ MODKEY|ShiftMask,     XK_F8,          setpalette,     {.i =  7} },
-	{ MODKEY|ShiftMask,     XK_F9,          setpalette,     {.i =  8} },
+	{ ShiftMask,            XK_Page_Up,     kscrollup,      {.i = -1} },
+	{ ShiftMask,            XK_Page_Down,   kscrolldown,    {.i = -1} },
 };
 
 /*
@@ -482,4 +484,3 @@ static char ascii_printable[] =
 	" !\"#$%&'()*+,-./0123456789:;<=>?"
 	"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
 	"`abcdefghijklmnopqrstuvwxyz{|}~";
-
