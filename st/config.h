@@ -5,11 +5,11 @@
  *
  * font: see http://freedesktop.org/software/fontconfig/fontconfig-user.html
  */
-static char *font = "JetBrainsMono Nerd Font Mono:pixelsize=19:antialias=true:autohint=true";
+static char *font = "JetBrainsMono Nerd Font Mono:pixelsize=20:antialias=true:autohint=true";
 /* Spare fonts */
 static char *font2[] = {
-	"FontAwesome:pixelsize=19:antialias=true:autohint=true",
-	"Noto Color Emoji:pixelsize=19:antialias=true:autohint=true",
+	"FontAwesome:pixelsize=20:antialias=true:autohint=true",
+	"Noto Color Emoji:pixelsize=20:antialias=true:autohint=true",
 };
 
 static int borderpx = 2;
@@ -147,7 +147,6 @@ static unsigned int defaultrcs = 257;
  * 2: Block ("█")
  * 4: Underline ("_")
  * 6: Bar ("|")
- * 7: Snowman ("☃")
  */
 static unsigned int cursorshape = 4;
 
