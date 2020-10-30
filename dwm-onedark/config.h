@@ -22,12 +22,12 @@ static const int attachdirection = 4;    /* 0 default, 1 above, 2 aside, 3 below
 
 // dwm
 static const char *fonts[]          = { "JetBrainsMono Nerd Font Mono:size=12",
-					"Noto Color Emoji:size=12",
-					"Font Awesome 5 Brands:size=14",
-					"Font Awesome 5 Free:size=14",
-					"FontAwesome:size=14"};
+                                        "Noto Color Emoji:size=12",
+		                    			"Font Awesome 5 Brands:size=18",
+										"Font Awesome 5 Free:size=18",
+										"FontAwesome:size=18"};
 // dmenu
-static const char dmenufont[]       = "JetBrainsMono Nerd Font Mono:size=12";
+static const char dmenufont[]       =   "JetBrainsMono Nerd Font Mono:size=12";
 
 //////////////////////////
 //    Color Scheming    //
@@ -38,7 +38,7 @@ static const char bg[]       = "#282a2e"; // Background
 static const char ib[]       = "#e06c75"; // Inactive Border
 static const char ft[]       = "#abb2bf"; // Font
 static const char tc[]       = "#282a2e"; // Current Tag & Window Font Color
-static const char ab[]       = "#98c379"; // Top Bar Second Color & Active Border
+static const char ab[]       = "#56b6c2"; // Top Bar Second Color & Active Border
 
 // Color Layout
 static const char *colors[][3]      = {
@@ -72,7 +72,7 @@ static const Rule rules[] = {
 //////////////////
 
 // Layout Specifications
-static const float mfact     = 0.51; /* factor of master area size [0.05..0.95] */
+static const float mfact     = 0.50; /* factor of master area size [0.05..0.95] */
 static const int nmaster     = 1;    /* number of clients in master area */
 static const int resizehints = 0;    /* 1 means respect size hints in tiled resizals */
 
@@ -80,9 +80,9 @@ static const int resizehints = 0;    /* 1 means respect size hints in tiled resi
 #include "fibonacci.c"
 static const Layout layouts[] = {
 	/* symbol     arrange function */
- 	{ "[\\]",      dwindle },
-	{ "[]=",      tile },    /* first entry is default */
-	{ "><>",      NULL },    /* no layout function means floating behavior */
+ 	{ "[//]",     dwindle },
+	{ "[]=",      tile },
+	{ "><>",      NULL },
 	{ "[M]",      monocle },
  	{ "[@]",      spiral },
 };
@@ -109,8 +109,9 @@ static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() 
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", bg, "-nf", ft, "-sb", ab, "-sf", tc, NULL };
 static const char *termcmd[]  = { "kitty", NULL };
 static const char *browser[]  = { "firefox", NULL };
-static const char *fbrowser[] = { "nemo", NULL };
+static const char *fbrowser[] = { "pcmanfm", NULL };
 static const char *slock[]    = { "slock", NULL };
+static const char *emacs[]    = { "emacsclient", "-c", NULL };
 
 // Volume Commands
 static const char *upvol[]   = { "amixer", "-q", "sset", "Master", "2%+", NULL };
@@ -128,8 +129,9 @@ static Key keys[] = {
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
 	{ MODKEY,                       XK_b,      spawn,          {.v = browser } },
 	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
-        { MODKEY,                       XK_n,      spawn,          {.v = fbrowser } },
-        { MODKEY|ShiftMask,             XK_s,      spawn,          {.v = slock } },
+    { MODKEY,                       XK_n,      spawn,          {.v = fbrowser } },
+    { MODKEY|ShiftMask,             XK_s,      spawn,          {.v = slock } },
+	{ MODKEY,                       XK_e,      spawn,          {.v = emacs } },
 	{ MODKEY|ShiftMask,             XK_b,      togglebar,      {0} },
 	{ MODKEY,                       XK_j,      focusstack,     {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,     {.i = -1 } },
@@ -167,7 +169,7 @@ static Key keys[] = {
 //	TAGKEYS(                        XK_8,                      7)
 //	TAGKEYS(                        XK_9,                      8)
 	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} }, 
-        { MODKEY,                       XK_F2, 	   spawn,          {.v = downvol } },
+    { MODKEY,                       XK_F2, 	   spawn,          {.v = downvol } },
   	{ MODKEY,                       XK_F1,     spawn,          {.v = mutevol } },
 	{ MODKEY,                       XK_F3,     spawn,          {.v = upvol   } },
 	{ MODKEY|ShiftMask,             XK_bracketleft, spawn,     {.v = killpulse } },
